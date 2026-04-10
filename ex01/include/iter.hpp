@@ -15,10 +15,12 @@
 
 #include <cstddef>
 
-template <typename T, typename F>
-void iter(T* array, size_t length, F ft) {
-	if (!array) return;
-	for (size_t i = 0; i < length; i++) { ft(array[i]); }
+template <typename T, typename F> void iter(T *array, size_t length, F ft) {
+  if (!array)
+    return;
+  for (size_t i = 0; i < length; i++) {
+    ft(array[i]);
+  }
 }
 
 // template <typename T, typename F>

@@ -17,37 +17,36 @@
 #include <iostream>
 #include <string>
 
-template <typename T>
-class Array {
+template <typename T> class Array {
 private:
-	T* _data;
-	unsigned int _size;
+  T *_data;
+  unsigned int _size;
 
 public:
-	// Orthodox Canonical Form
-	Array(void);
-	Array(unsigned int n);
-	Array(const Array& other);
-	Array& operator=(const Array& other);
-	~Array(void);
+  // Orthodox Canonical Form
+  Array(void);
+  Array(unsigned int n);
+  Array(const Array &other);
+  Array &operator=(const Array &other);
+  ~Array(void);
 
-	// Operator functions
-	T& operator[](unsigned int index);
-	const T& operator[](unsigned int index) const;
+  // Operator functions
+  T &operator[](unsigned int index);
+  const T &operator[](unsigned int index) const;
 
-	// Member functions
-	unsigned int size(void) const;
+  // Member functions
+  unsigned int size(void) const;
 
-	// Generic Nested Exception Class
-	class Error : public std::exception {
-	private:
-		std::string _msg;
+  // Generic Nested Exception Class
+  class Error : public std::exception {
+  private:
+    std::string _msg;
 
-	public:
-		Error(const std::string& msg) : _msg(msg) {}
-		virtual ~Error() throw() {}
-		virtual const char* what() const throw() { return _msg.c_str(); }
-	};
+  public:
+    Error(const std::string &msg) : _msg(msg) {}
+    virtual ~Error() throw() {}
+    virtual const char *what() const throw() { return _msg.c_str(); }
+  };
 };
 
 #include "Array.tpp"
