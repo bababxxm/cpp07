@@ -8,6 +8,8 @@
 .idea/
 *.swp
 *.swo
+.clang-format
 
 a.out
+test
 bin/

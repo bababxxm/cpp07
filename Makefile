@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: sklaokli <sklaokli@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/04/21 17:50:43 by sklaokli          #+#    #+#              #
+#    Updated: 2026/04/23 13:47:30 by sklaokli         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 # --- Master Configuration ---
 
 EX_DIRS := $(sort $(wildcard ex??))
@@ -6,22 +18,37 @@ IS_GIT  := $(shell [ -d .git ] && echo "yes" || echo "no")
 # --- Remote URLs ---
 
 GIT_URL   := git@github.com:bababxxm/cpp07.git
-INTRA_URL := git@vogsphere.42bangkok.com:vogsphere/intra-uuid-d9965845-13ad-4cbb-9455-9912c1f97258-7192116-sklaokli
+INTRA_URL := 
 
 # --- Style Configurations ---
 
-# Your VS Code Settings (Default)
-STYLE_DEFAULT := "{BasedOnStyle: Google, UseTab: ForIndentation, IndentWidth: 4, TabWidth: 4, ColumnLimit: 100, PointerAlignment: Left, DerivePointerAlignment: false, BreakBeforeBraces: Attach, AccessModifierOffset: -4, SortIncludes: true, IncludeBlocks: Merge, AllowShortFunctionsOnASingleLine: Inline, AllowShortBlocksOnASingleLine: Always, BreakConstructorInitializers: BeforeComma}"
-STYLE_GOOGLE  := "Google"
-STYLE_LLVM    := "LLVM"
+define CLANG_FORMAT_CONTENT
+BasedOnStyle: Google
+UseTab: ForIndentation
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 80
+PointerAlignment: Left
+DerivePointerAlignment: false
+BreakBeforeBraces: Attach
+AccessModifierOffset: -4
+SortIncludes: true
+IncludeBlocks: Merge
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: Always
+BreakConstructorInitializers: BeforeComma
+Standard: C++03
+SpacesInAngles: false
+endef
+export CLANG_FORMAT_CONTENT
 
 # Style selection logic
 ifeq ($(style), google)
-    CHOSEN_STYLE := $(STYLE_GOOGLE)
+    CHOSEN_STYLE := "Google"
 else ifeq ($(style), llvm)
-    CHOSEN_STYLE := $(STYLE_LLVM)
+    CHOSEN_STYLE := "LLVM"
 else
-    CHOSEN_STYLE := $(STYLE_DEFAULT)
+    CHOSEN_STYLE := "file"
 endif
 
 # --- Colors ---
@@ -49,37 +76,52 @@ define GITIGNORE_CONTENT
 *.swo
 
 a.out
+test
 bin/
 endef
 
 define MAKEFILE_CONTENT
-NAME        :=  a.out
+NAME        :=  test
+
 SRC_DIR     :=  src
 OBJ_DIR     :=  bin
 INC_DIR     :=  include
-FILES       :=  main.cpp $$(addsuffix .cpp, $$(CLASS))
+
+FILES       :=  main.cpp
+
 SRC         :=  $$(addprefix $$(SRC_DIR)/, $$(FILES))
 OBJ         :=  $$(addprefix $$(OBJ_DIR)/, $$(FILES:%.cpp=%.o))
-HEADERS     :=  $$(addprefix $$(INC_DIR)/, $$(addsuffix .hpp, $$(HEADER))) \
-                $$(addprefix $$(INC_DIR)/, $$(addsuffix .hpp, $$(CLASS)))
+DEP         :=  $$(OBJ:.o=.d)
+
 CXX         :=  c++
 WFLAGS      :=  -Wall -Wextra -Werror
 STDFLAGS    :=  -std=c++98 -pedantic
+DEPFLAGS    :=  -MMD -MP
 INCLUDE     :=  -I$$(INC_DIR)
-COMPILE     :=  $$(CXX) $$(WFLAGS) $$(STDFLAGS) $$(INCLUDE)
+
+CXXFLAGS    :=  $$(WFLAGS) $$(STDFLAGS) $$(DEPFLAGS) $$(INCLUDE)
 
 all: $$(NAME)
-$$(OBJ_DIR):
-	@mkdir -p $$(OBJ_DIR)
-$$(OBJ_DIR)/%.o: $$(SRC_DIR)/%.cpp $$(HEADERS) | $$(OBJ_DIR)
-	@$$(COMPILE) -c $$< -o $$@
+
 $$(NAME): $$(OBJ)
-	@$$(COMPILE) $$(OBJ) -o $$(NAME)
+	$$(CXX) $$(CXXFLAGS) $$(OBJ) -o $$(NAME)
+
+$$(OBJ_DIR):
+	mkdir -p $$(OBJ_DIR)
+
+$$(OBJ_DIR)/%.o: $$(SRC_DIR)/%.cpp | $$(OBJ_DIR)
+	$$(CXX) $$(CXXFLAGS) -c $$< -o $$@
+
 clean:
-	@rm -rf $$(OBJ_DIR)
+	rm -rf $$(OBJ_DIR)
+
 fclean: clean
-	@rm -f $$(NAME)
+	rm -f $$(NAME)
+
 re: fclean all
+
+-include $$(DEP)
+
 .PHONY: all clean fclean re
 endef
 
@@ -98,14 +140,27 @@ export MAIN_CONTENT
 
 # --- Master Logic ---
 
-.DEFAULT_GOAL := help
+# .DEFAULT_GOAL := help
+
+all:
+	@if [ -z "$(EX_DIRS)" ]; then \
+		echo "$(YELLOW)No exercises found. Use 'make create ex=00'$(RESET)"; \
+	else \
+		echo "$(BLUE)Compiling $$(echo $(EX_DIRS) | sed 's/ /, /g')...$(RESET)"; \
+		for dir in $(EX_DIRS); do \
+			$(MAKE) -C $$dir --no-print-directory -s; \
+		done; \
+		echo "$(GREEN)All exercises finished successfully!$(RESET)"; \
+	fi
 
 help:
+	@echo ""
 	@echo "$(CYAN)Available commands for Master Makefile:$(RESET)"
 	@echo ""
 	@echo "$(BLUE)Build & Test:$(RESET)"
 	@echo "  $(GREEN)make all$(RESET)            - Compile all exercises"
 	@echo "  $(GREEN)make test$(RESET)           - Compile and run tests for all exercises"
+	@echo "  $(GREEN)make leaks$(RESET)          - Run valgrind on all exercises"
 	@echo "  $(GREEN)make clean$(RESET)          - Remove object files"
 	@echo "  $(GREEN)make fclean$(RESET)         - Remove objects and executables"
 	@echo "  $(GREEN)make re$(RESET)             - Recompile everything"
@@ -125,50 +180,56 @@ help:
 	@echo "  $(GREEN)make create ex=XX$(RESET)   - Generate folder structure for an exercise"
 	@echo ""
 
-all:
-	@if [ -z "$(EX_DIRS)" ]; then \
-		echo "$(YELLOW)No exercises found. Use 'make create ex=00'$(RESET)"; \
-	else \
-		for dir in $(EX_DIRS); do \
-			echo "$(BLUE)Compiling $$dir...$(RESET)"; \
-			$(MAKE) -C $$dir --no-print-directory -s; \
-		done; \
-		echo "$(GREEN)All exercises finished successfully!$(RESET)"; \
-	fi
-
 clean:
 	@for dir in $(EX_DIRS); do $(MAKE) clean -C $$dir --no-print-directory -s; done
 
 fclean:
 	@for dir in $(EX_DIRS); do $(MAKE) fclean -C $$dir --no-print-directory -s; done
+	@rm -f .clang-format
 
 re: fclean all
+
+create:
+	@if [ -z "$(ex)" ]; then \
+		echo "$(YELLOW)Notice: Use 'make create ex=XX' (e.g., make create ex=00)$(RESET)"; \
+	else \
+		FOLDER="ex$$(echo $(ex) | sed 's/^ex//')"; \
+		mkdir -p $$FOLDER/src $$FOLDER/include; \
+		echo "$$MAKEFILE_CONTENT" > $$FOLDER/Makefile; \
+		echo "$$MAIN_CONTENT" > $$FOLDER/src/main.cpp; \
+		echo "$(GREEN)Exercise $(YELLOW)$$FOLDER$(GREEN) created successfully.$(RESET)"; \
+	fi
+
+.clang-format:
+	@echo "$$CLANG_FORMAT_CONTENT" > .clang-format
+
+format: .clang-format
+	@if command -v clang-format >/dev/null 2>&1; then \
+		find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) -exec clang-format -style=$(CHOSEN_STYLE) -i {} +; \
+		echo "$(GREEN)Code formatted using $(YELLOW)$(if $(style),$(style),default)$(GREEN) style successfully.$(RESET)"; \
+	else \
+		echo "$(YELLOW)Notice: clang-format is not installed.$(RESET)"; \
+	fi
 
 test:
 	@for dir in $(EX_DIRS); do \
 		$(MAKE) -C $$dir --no-print-directory -s; \
 		echo "$(YELLOW)Running $$dir tests...$(RESET)"; \
-		./$$dir/a.out; \
+		./$$dir/test; \
 		echo ""; \
 	done
 
-create:
-	@if [ -z "$(ex)" ]; then \
-		echo "$(RED)Error: Use 'make create ex=XX' (e.g., make create ex=00)$(RESET)"; \
-		exit 1; \
-	fi; \
-	FOLDER="ex$$(echo $(ex) | sed 's/^ex//')"; \
-	mkdir -p $$FOLDER/src $$FOLDER/include; \
-	echo "$$MAKEFILE_CONTENT" > $$FOLDER/Makefile; \
-	echo "$$MAIN_CONTENT" > $$FOLDER/src/main.cpp; \
-	echo "$(GREEN)Created $$FOLDER$(RESET)"
-
-format:
-	@find . -type f \( -name "*.cpp" -o -name "*.hpp" \) -exec clang-format -style=$(CHOSEN_STYLE) -i {} +
-	@echo "$(GREEN)Code formatted using $(YELLOW)$(if $(style),$(style),default)$(GREEN) style successfully.$(RESET)"
+leaks:
+	@for dir in $(EX_DIRS); do \
+		$(MAKE) -C $$dir --no-print-directory -s; \
+		echo "$(YELLOW)Checking leaks in $$dir...$(RESET)"; \
+		valgrind --leak-check=full ./$$dir/test; \
+		echo ""; \
+	done
 
 # --- Repo Management Logic ---
 
+FORCE_FLAG=""
 CURRENT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 
 git:
@@ -206,8 +267,10 @@ github:
 		echo "$(BLUE)Verifying GitHub link...$(RESET)"; \
 		if git ls-remote $(GIT_URL) > /dev/null 2>&1; then \
 			$(MAKE) setup_remotes --no-print-directory -s; \
-			echo "$(PURPLE)Broadcasting $(CURRENT_BRANCH) to github:main...$(RESET)"; \
-			git push github $(CURRENT_BRANCH):main; \
+			F_FLAG=""; \
+			if [ "$(force)" = "yes" ]; then F_FLAG="--force"; fi; \
+			echo "$(PURPLE)Broadcasting $(CURRENT_BRANCH) to github:main$${F_FLAG:+ (FORCED)}...$(RESET)"; \
+			git push github $(CURRENT_BRANCH):main $$F_FLAG; \
 			echo "$(GREEN)Broadcast successful!$(RESET)"; \
 		else \
 			echo "$(RED)Error: Could not reach GitHub. Check link or SSH keys.$(RESET)"; \
@@ -220,42 +283,55 @@ github:
 	elif [ "$(INTRA_URL)" = "git@vogsphere.42bangkok.com:vogsphere/intra-uuid-here.git" ] || [ -z "$(INTRA_URL)" ]; then \
 		echo "$(YELLOW)Notice: INTRA_URL is still a placeholder. Skipping 42 push.$(RESET)"; \
 	else \
-		echo "$(BLUE)Preparing clean 42 submission (excluding Master Makefile)...$(RESET)"; \
+		echo "$(BLUE)Verifying 42 Intra link...$(RESET)"; \
 		if git ls-remote $(INTRA_URL) > /dev/null 2>&1; then \
 			$(MAKE) setup_remotes --no-print-directory -s; \
-			# 1. Create a temporary branch from your current one \
-			git checkout -b temp_42_submission --quiet; \
-			# 2. Remove the Master Makefile from THIS branch only \
-			git rm Makefile --quiet; \
-			git commit -m "Clean submission" --quiet; \
-			# 3. Push this clean branch to 42's master \
-			echo "$(PURPLE)Broadcasting clean code to 42:master...$(RESET)"; \
-			git push 42 temp_42_submission:master --force; \
-			# 4. Switch back and clean up the temp branch \
-			git checkout - --quiet; \
-			git branch -D temp_42_submission --quiet; \
-			echo "$(GREEN)Broadcast to 42 successful!$(RESET)"; \
+			F_FLAG=""; \
+			if [ "$(force)" = "yes" ]; then F_FLAG="--force"; fi; \
+			echo "$(PURPLE)Broadcasting $(CURRENT_BRANCH) to 42:main$${F_FLAG:+ (FORCED)}...$(RESET)"; \
+			git push 42 $(CURRENT_BRANCH):main $$F_FLAG; \
+			echo "$(GREEN)Broadcast successful!$(RESET)"; \
 		else \
 			echo "$(RED)Error: Could not reach Intra. Check VPN/Network.$(RESET)"; \
 		fi \
 	fi
 
 both:
-	@$(MAKE) github --no-print-directory
-	@$(MAKE) 42 --no-print-directory
+	@$(MAKE) github force=$(force) --no-print-directory
+	@$(MAKE) 42 force=$(force) --no-print-directory
 
 status:
-	@if [ -d .git ]; then \
-		git remote -v; \
+	@echo "$(BLUE)Current Branch:$(RESET) $(PURPLE)$(CURRENT_BRANCH)$(RESET)"
+	@echo ""
+	@printf "$(BLUE)%-12s %-10s$(RESET)\n" "REMOTE" "STATUS"
+	
+	@printf "%-12s " "GitHub"
+	@if [ "$(GIT_URL)" = "git@github.com:your_username/your_repo.git" ] || [ -z "$(GIT_URL)" ]; then \
+		echo "$(RED)[OFFLINE]$(RESET)"; \
+	elif git ls-remote --exit-code github main > /dev/null 2>&1; then \
+		echo "$(GREEN)[ONLINE]$(RESET)"; \
 	else \
-		echo "$(RED)Git not initialized.$(RESET)"; \
+		echo "$(RED)[OFFLINE]$(RESET)"; \
 	fi
+	
+	@printf "%-12s " "42 Intra"
+	@if [ "$(INTRA_URL)" = "git@vogsphere.42bangkok.com:vogsphere/intra-uuid-here.git" ] || [ -z "$(INTRA_URL)" ]; then \
+		echo "$(RED)[OFFLINE]$(RESET)"; \
+	elif git ls-remote --exit-code 42 master > /dev/null 2>&1; then \
+		echo "$(GREEN)[ONLINE]$(RESET)"; \
+	else \
+		echo "$(RED)[OFFLINE]$(RESET)"; \
+	fi
+	
+	@echo ""
+	@echo "$(YELLOW)GH:$(RESET) $(if $(filter-out git@github.com:your_username/your_repo.git,$(GIT_URL)),$(GIT_URL),$(RED)Not Configured$(RESET))"
+	@echo "$(YELLOW)42:$(RESET) $(if $(filter-out git@vogsphere.42bangkok.com:vogsphere/intra-uuid-here.git,$(INTRA_URL)),$(INTRA_URL),$(RED)Not Configured$(RESET))"
 
 # Master Rules
 .PHONY: all clean fclean re help
 
 # Additional Rules
-.PHONY: test create format
+.PHONY: create format test leaks
 
 # Repo Rules
 .PHONY: git setup_remotes github 42 both status
