@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sklaokli <sklaokli@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/23 12:05:12 by sklaokli          #+#    #+#             */
-/*   Updated: 2026/04/23 13:46:41 by sklaokli         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <iostream>
 #include <string>
 #include "Array.hpp"
@@ -25,9 +13,49 @@ void test_header(const std::string& title) {
 	std::cout << B_CYAN << "[ " << title << " ]" << RESET << std::endl;
 }
 
-void test1() {
+#define MAX_VAL 750
+
+void test0() {
 	std::cout << DIM << "----------------------------------------" << RESET
 	          << std::endl;
+	test_header("TEST 0: Main.cpp from Subjects");
+
+	Array<int> numbers(MAX_VAL);
+	int* mirror = new int[MAX_VAL];
+	srand(time(NULL));
+	for (int i = 0; i < MAX_VAL; i++) {
+		const int value = rand();
+		numbers[i] = value;
+		mirror[i] = value;
+	}
+	// SCOPE
+	{
+		Array<int> tmp = numbers;
+		Array<int> test(tmp);
+	}
+
+	for (int i = 0; i < MAX_VAL; i++) {
+		if (mirror[i] != numbers[i]) {
+			std::cerr << "didn't save the same value!!" << std::endl;
+			return;
+		}
+	}
+	try {
+		numbers[-2] = 0;
+	} catch (const std::exception& e) { std::cerr << e.what() << '\n'; }
+	try {
+		numbers[MAX_VAL] = 0;
+	} catch (const std::exception& e) { std::cerr << e.what() << '\n'; }
+
+	for (int i = 0; i < MAX_VAL; i++) { numbers[i] = rand(); }
+	delete[] mirror;  //
+	return;
+
+	std::cout << DIM << "----------------------------------------" << RESET
+	          << std::endl;
+}
+
+void test1() {
 	test_header("TEST 1: Basic Construction & Size");
 
 	Array<int> empty;
@@ -139,6 +167,7 @@ void test6() {
 }
 
 int main() {
+	test0();
 	test1();
 	test2();
 	test3();
