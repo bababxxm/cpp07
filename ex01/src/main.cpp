@@ -6,7 +6,7 @@
 /*   By: sklaokli <sklaokli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/23 12:01:23 by sklaokli          #+#    #+#             */
-/*   Updated: 2026/04/24 16:49:22 by sklaokli         ###   ########.fr       */
+/*   Updated: 2026/04/24 16:50:45 by sklaokli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,16 +33,6 @@ int multiplyByTwo(int& n) {
 	n *= 2;
 	return n;
 }
-
-struct Adder {
-	int _amount;
-	Adder(int amount) : _amount(amount) {}
-	void operator()(int& n) const { n += _amount; }
-};
-
-struct StringPrinter {
-	void operator()(std::string& s) const { std::cout << "[" << s << "] "; }
-};
 
 void test1() {
 	std::cout << DIM << "----------------------------------------" << RESET
