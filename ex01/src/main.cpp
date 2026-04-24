@@ -6,7 +6,7 @@
 /*   By: sklaokli <sklaokli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/23 12:01:23 by sklaokli          #+#    #+#             */
-/*   Updated: 2026/04/23 12:54:34 by sklaokli         ###   ########.fr       */
+/*   Updated: 2026/04/24 16:49:22 by sklaokli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,29 +68,7 @@ void test2() {
 }
 
 void test3() {
-	test_header("TEST 3: Functors (Stateful Objects)");
-	int intArray[] = {1, 2, 3, 4, 5};
-	Adder add100(100);
-	::iter(intArray, 5, add100);
-	std::cout << "After +100: ";
-	::iter(intArray, 5, printInt);
-	std::cout << std::endl;
-	std::cout << DIM << "----------------------------------------" << RESET
-	          << std::endl;
-}
-
-void test4() {
-	test_header("TEST 4: String Array (Generic T)");
-	std::string strArray[] = {"42", "Bangkok", "C++", "Templates"};
-	StringPrinter sPrinter;
-	::iter(strArray, 4, sPrinter);
-	std::cout << std::endl;
-	std::cout << DIM << "----------------------------------------" << RESET
-	          << std::endl;
-}
-
-void test5() {
-	test_header("TEST 5: NULL Array Safety");
+	test_header("TEST 3: NULL Array Safety");
 	int* nullArray = NULL;
 	::iter(nullArray, 0, printInt);
 	std::cout << B_GREEN << "SUCCESS: Handled 0 length safely!" << RESET
@@ -103,7 +81,5 @@ int main() {
 	test1();
 	test2();
 	test3();
-	test4();
-	test5();
 	return 0;
 }

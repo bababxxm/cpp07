@@ -13,4 +13,4 @@
 a.out
 test
 bin/
-./Makefile
+/Makefile
